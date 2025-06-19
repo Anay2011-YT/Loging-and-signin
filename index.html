@@ -3,23 +3,47 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Ripple Studio AI - Login & Assistant</title>
+  <title>Ripple AI Assistant - Login & Assistant</title>
   <style>
-    /* All the CSS provided in the previous message goes here */
-    /* [Refer to the previous message for complete styles section] */
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: #f0f2f5;
+    }
+    #loginContainer, #aiApp {
+      height: 100vh;
+      width: 100vw;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+    }
+    .logo {
+      max-width: 250px;
+      margin-bottom: 1rem;
+    }
+    h1.brand-title {
+      font-size: 1.5rem;
+      color: #333;
+      margin-bottom: 2rem;
+    }
+    /* Existing styles would continue below this comment */
   </style>
 </head>
 <body>
   <!-- LOGIN/SIGNUP CONTAINER -->
   <div id="loginContainer">
+    <img src="/mnt/data/Gemini_Generated_Image_d7h7f1d7h7f1d7h7.png" alt="Ripple AI Assistant Logo" class="logo">
+    <h1 class="brand-title">Ripple AI Assistant</h1>
     <div class="container">
       <!-- Tabs and Forms (Login/Sign-up) -->
-      <!-- [Refer to the previous message for full HTML structure] -->
     </div>
   </div>
 
   <!-- AI ASSISTANT APP -->
-  <div id="aiApp">
+  <div id="aiApp" style="display:none; flex-direction: column;">
+    <img src="/mnt/data/Gemini_Generated_Image_d7h7f1d7h7f1d7h7.png" alt="Ripple AI Assistant Logo" class="logo">
+    <h1 class="brand-title">Ripple AI Assistant</h1>
     <!-- Assistant UI Elements -->
   </div>
 
@@ -42,7 +66,6 @@
 
     const loginContainer = document.getElementById("loginContainer");
     const aiApp = document.getElementById("aiApp");
-    const redirectURL = "https://anay2011-yt.github.io/Ripple/";
 
     window.signup = () => {
       const email = document.getElementById("signupEmail").value;
@@ -97,11 +120,6 @@
       const field = document.getElementById(id);
       field.type = field.type === 'password' ? 'text' : 'password';
     }
-  </script>
-
-  <script>
-    // AI Assistant logic including chat, mic input, theme toggle, voice, export, and image generation
-    // [Refer to previous assistant HTML for complete assistant script logic.]
   </script>
 </body>
 </html>
