@@ -3,9 +3,11 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Login / Sign Up</title>
+  <title>Ripple Studio - Login & AI</title>
   <style>
+    /* General Styles */
     * { box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+
     body {
       margin: 0;
       background: #f0f2f5;
@@ -13,25 +15,24 @@
       display: flex;
       align-items: center;
       justify-content: center;
+      color: var(--text);
+      transition: background 0.3s, color 0.3s;
     }
-    .container {
+
+    .container, #aiApp {
       background: #fff;
       padding: 2rem;
       border-radius: 10px;
       width: 370px;
       box-shadow: 0 5px 20px rgba(0,0,0,0.1);
     }
+
+    /* Tabs */
     .tabs { display: flex; justify-content: space-around; margin-bottom: 1rem; border-bottom: 2px solid #ddd; }
-    .tab {
-      padding-bottom: 0.5rem;
-      cursor: pointer;
-      font-weight: 600;
-      color: #888;
-    }
-    .tab.active {
-      color: #000;
-      border-bottom: 3px solid #007bff;
-    }
+    .tab { padding-bottom: 0.5rem; cursor: pointer; font-weight: 600; color: #888; }
+    .tab.active { color: #000; border-bottom: 3px solid #007bff; }
+
+    /* Forms */
     form { display: none; flex-direction: column; }
     form.active { display: flex; }
     input {
@@ -63,6 +64,8 @@
       font-size: 0.85rem;
       color: #555;
     }
+
+    /* Social buttons */
     .social-buttons {
       display: flex;
       flex-direction: column;
@@ -81,13 +84,66 @@
       background: #000;
       color: #fff;
     }
-    .social-button img {
-      width: 20px; height: 20px;
+    .social-button img { width: 20px; height: 20px; }
+
+    /* AI Interface */
+    #aiApp { display: none; flex-direction: column; width: 100%; max-width: 700px; height: 100vh; }
+
+    :root {
+      --bg: #0f0f0f;
+      --text: #ffffff;
+      --user-bg: #4b6cb7;
+      --bot-bg: #2e2e2e;
     }
+
+    body.light { --bg: #ffffff; --text: #000000; --user-bg: #cce5ff; --bot-bg: #f1f1f1; }
+    body.blue { --bg: #001f3f; --text: #ffffff; --user-bg: #0074d9; --bot-bg: #003366; }
+    body.pink { --bg: #ffe6f0; --text: #4b004b; --user-bg: #ff99cc; --bot-bg: #ffe0f0; }
+    body.cyber { --bg: #0f0f0f; --text: #00ffea; --user-bg: #00ffaa; --bot-bg: #003b3b; }
+
+    #chat { flex: 1; overflow-y: auto; padding: 20px; background: var(--bg); }
+    .message {
+      padding: 14px 20px;
+      border-radius: 20px;
+      max-width: 80%;
+      font-size: 1.05rem;
+      margin: 10px;
+      word-wrap: break-word;
+    }
+    .user { background: var(--user-bg); align-self: flex-end; }
+    .bot { background: var(--bot-bg); align-self: flex-start; }
+
+    .controls, #inputArea, #themeToggle, #userDropdown {
+      padding: 10px;
+      background: var(--bg);
+    }
+
+    #inputArea input {
+      padding: 10px;
+      width: 80%;
+      max-width: 400px;
+      border-radius: 20px;
+      border: none;
+      background: var(--bot-bg);
+      color: var(--text);
+    }
+
+    .mic-button {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      background: #007aff;
+      color: white;
+      border: none;
+    }
+
+    #themeToggle, #voiceSelect { margin: 10px; }
+
+    #userDropdown { position: absolute; top: 10px; right: 10px; }
   </style>
 </head>
-<body>
-  <div class="container">
+<body class="dark">
+  <div class="container" id="loginContainer">
     <div class="tabs">
       <div class="tab active" onclick="switchTab('login')">Login</div>
       <div class="tab" onclick="switchTab('signup')">Sign Up</div>
@@ -122,18 +178,43 @@
     </form>
   </div>
 
-  <!-- Firebase SDK via type="module" -->
+  <div id="aiApp">
+    <select id="themeToggle">
+      <option value="dark">🌙 Dark</option>
+      <option value="light">☀️ Light</option>
+      <option value="blue">🌊 Blue</option>
+      <option value="pink">🌸 Pink</option>
+      <option value="cyber">⚡ Cyber</option>
+    </select>
+
+    <div id="userDropdown" style="display:none">
+      <button id="userButton">👤</button>
+      <button id="logoutBtn">Logout</button>
+    </div>
+
+    <div id="chat"></div>
+
+    <div class="controls">
+      <button onclick="input.value='What is the weather today?'; sendMessage();">⛅</button>
+      <button onclick="input.value='Tell me a joke'; sendMessage();">😂</button>
+      <button onclick="window.open('https://ripplestudio.in', '_blank')">🌐</button>
+      <button onclick="speechSynthesis.cancel()">🛑</button>
+      <button onclick="chat.innerHTML = ''">🧹</button>
+      <button onclick="exportChat()">⬇️ Export</button>
+      <button onclick="generateImage()">🖼 Generate</button>
+      <select id="voiceSelect"></select>
+    </div>
+
+    <div id="inputArea">
+      <button class="mic-button">🎤</button>
+      <input type="text" id="input" placeholder="Tap mic or type..." />
+    </div>
+  </div>
+
+  <!-- Firebase & App Scripts -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
-    import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-analytics.js";
-    import {
-      getAuth,
-      createUserWithEmailAndPassword,
-      signInWithEmailAndPassword,
-      signInWithPopup,
-      GoogleAuthProvider,
-      OAuthProvider
-    } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js";
+    import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, OAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyAwUPfh45RyIYoj4YloJxO1L2rVUpBXa-I",
@@ -141,52 +222,184 @@
       projectId: "loginandsignin-8e4ba",
       storageBucket: "loginandsignin-8e4ba.appspot.com",
       messagingSenderId: "353217756154",
-      appId: "1:353217756154:web:a24ce6d22489e2c9eac243",
-      measurementId: "G-50G5EV478W"
+      appId: "1:353217756154:web:a24ce6d22489e2c9eac243"
     };
 
     const app = initializeApp(firebaseConfig);
-    const analytics = getAnalytics(app);
     const auth = getAuth();
 
-    const redirectURL = "https://anay2011-yt.github.io/Ripple/";
+    const input = document.getElementById("input");
+    const chat = document.getElementById("chat");
+    const voiceSelect = document.getElementById("voiceSelect");
 
-    // Email/Password Signup
     window.signup = () => {
-      const email = document.getElementById("signupEmail").value;
-      const password = document.getElementById("signupPassword").value;
+      const email = signupEmail.value;
+      const password = signupPassword.value;
       createUserWithEmailAndPassword(auth, email, password)
-        .then(() => window.location.href = redirectURL)
+        .then(() => showAI())
         .catch(error => alert(error.message));
     };
 
-    // Email/Password Login
     window.login = () => {
-      const email = document.getElementById("loginEmail").value;
-      const password = document.getElementById("loginPassword").value;
+      const email = loginEmail.value;
+      const password = loginPassword.value;
       signInWithEmailAndPassword(auth, email, password)
-        .then(() => window.location.href = redirectURL)
+        .then(() => showAI())
         .catch(error => alert(error.message));
     };
 
-    // Google Sign-In
     window.signInWithGoogle = () => {
       const provider = new GoogleAuthProvider();
       signInWithPopup(auth, provider)
-        .then(() => window.location.href = redirectURL)
+        .then(() => showAI())
         .catch(error => alert(error.message));
     };
 
-    // Apple Sign-In
     window.signInWithApple = () => {
       const provider = new OAuthProvider('apple.com');
       signInWithPopup(auth, provider)
-        .then(() => window.location.href = redirectURL)
+        .then(() => showAI())
         .catch(error => alert(error.message));
+    };
+
+    function showAI() {
+      loginContainer.style.display = "none";
+      aiApp.style.display = "flex";
+    }
+
+    onAuthStateChanged(auth, (user) => {
+      if (user) showAI();
+    });
+
+    logoutBtn.onclick = () => signOut(auth).then(() => location.reload());
+
+    // Theme
+    const themeToggle = document.getElementById("themeToggle");
+    document.body.className = localStorage.getItem("theme") || "dark";
+    themeToggle.value = document.body.className;
+    themeToggle.onchange = () => {
+      document.body.className = themeToggle.value;
+      localStorage.setItem("theme", themeToggle.value);
+    };
+
+    // Voice
+    let voices = [];
+    function populateVoices() {
+      voices = speechSynthesis.getVoices();
+      voiceSelect.innerHTML = voices.map((v, i) => `<option value="${i}">${v.name}</option>`).join("");
+    }
+    speechSynthesis.onvoiceschanged = populateVoices;
+    populateVoices();
+
+    function speak(text) {
+      const utter = new SpeechSynthesisUtterance(text);
+      const selected = voices[voiceSelect.value] || voices[0];
+      utter.voice = selected;
+      utter.lang = selected.lang;
+      speechSynthesis.speak(utter);
+    }
+
+    document.querySelector('.mic-button').onclick = () => {
+      const rec = new webkitSpeechRecognition();
+      rec.lang = 'en-US';
+      rec.start();
+      rec.onresult = e => {
+        input.value = e.results[0][0].transcript;
+        sendMessage();
+      };
+    };
+
+    function appendMessage(text, sender) {
+      const div = document.createElement("div");
+      div.className = `message ${sender}`;
+      div.innerHTML = text;
+      chat.appendChild(div);
+      chat.scrollTop = chat.scrollHeight;
+    }
+
+    window.sendMessage = () => {
+      const msg = input.value.trim();
+      if (!msg) return;
+      appendMessage(msg, "user");
+      input.value = "";
+
+      fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=AIzaSyBTPmXDzU3SjB8wSC7AAxo7xUZx8zFFTi8`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ contents: [{ role: "user", parts: [{ text: msg }] }] })
+      })
+      .then(res => res.json())
+      .then(data => {
+        const reply = data.candidates?.[0]?.content?.parts?.[0]?.text || "I didn't get that.";
+        appendMessage(reply, "bot");
+        speak(reply);
+      });
+    };
+
+    input.onkeydown = e => { if (e.key === "Enter") sendMessage(); };
+
+    window.exportChat = () => {
+      let text = '';
+      chat.querySelectorAll('.message').forEach(msg => {
+        const role = msg.classList.contains('user') ? 'USER' : 'BOT';
+        text += `${role}: ${msg.textContent}\n\n`;
+      });
+      const blob = new Blob([text], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'chat.txt';
+      a.click();
+      URL.revokeObjectURL(url);
+    };
+
+    window.generateImage = async () => {
+      const prompt = input.value.trim();
+      if (!prompt) return;
+      appendMessage(prompt, "user");
+      input.value = "";
+      appendMessage("Generating image...", "bot");
+
+      try {
+        const geminiRes = await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-pro-vision:generateContent?key=AIzaSyBTPmXDzU3SjB8wSC7AAxo7xUZx8zFFTi8", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ contents: [{ role: "user", parts: [{ text: `Generate an image based on this description: ${prompt}` }] }] })
+        });
+        const geminiData = await geminiRes.json();
+        const imageBase64 = geminiData.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
+        if (imageBase64) {
+          const img = document.createElement("img");
+          img.src = `data:image/png;base64,${imageBase64}`;
+          img.style.maxWidth = "300px";
+          img.style.borderRadius = "10px";
+          appendMessage(img.outerHTML, "bot");
+          return;
+        }
+        throw new Error("Gemini failed");
+      } catch {
+        const deepRes = await fetch("https://api.deepai.org/api/text2img", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded",
+            "api-key": "quickstart-QUdJIGlzIGNvbWluZy4uLi4K"
+          },
+          body: `text=${encodeURIComponent(prompt)}`
+        });
+        const deepData = await deepRes.json();
+        if (deepData.output_url) {
+          const img = document.createElement("img");
+          img.src = deepData.output_url;
+          img.style.maxWidth = "300px";
+          img.style.borderRadius = "10px";
+          appendMessage(img.outerHTML, "bot");
+        } else {
+          appendMessage("❌ Both Gemini and DeepAI image generation failed.", "bot");
+        }
+      }
     };
   </script>
 
-  <!-- Tab/Password Script -->
   <script>
     function switchTab(tab) {
       document.getElementById('loginForm').classList.remove('active');
